@@ -1,63 +1,66 @@
 import os
-from database import init_db, get_all_records, clear_database
-from ocr import detect_and_register_plate, detect_and_register_exit
+from database import init_db, get_all_parking_logs, clear_table
+from ocr import process_plate
 
-# Görüntülerin bulunduğu klasör
-IMAGE_FOLDER = r"C:\Users\muham\PycharmProjects\Otopark_Sistemi"
+def process_images_for_entry(folder_path):
+    """
+    Belirtilen klasördeki görüntüleri araç giriş işlemi için işler.
+    """
+    for file_name in os.listdir(folder_path):
+        if file_name.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_path = os.path.join(folder_path, file_name)
+            from cv2 import imread  # Görselleri okumak için cv2'den imread
+            image = imread(image_path)  # Görseli oku
+            plates = process_plate(image)  # Görsel üzerinden plaka algıla
+            print(f"Giriş İşlemi - Algılanan Plakalar: {plates}")
 
-def process_all_images_for_entry():
+def process_images_for_exit(folder_path):
     """
-    Klasördeki tüm görüntüleri okuyarak araç giriş işlemi yapar.
+    Belirtilen klasördeki görüntüleri araç çıkış işlemi için işler.
     """
-    for file_name in os.listdir(IMAGE_FOLDER):
-        if file_name.lower().endswith(".jpg"):  # Sadece JPG dosyalarını işliyoruz
-            image_path = os.path.join(IMAGE_FOLDER, file_name)
-            print(f"Görüntü işleniyor: {image_path}")
-            detected_plates = detect_and_register_plate(image_path)
-            print(f"Giriş İşlemi - Tespit Edilen Plakalar: {detected_plates}")
-
-def process_all_images_for_exit():
-    """
-    Klasördeki tüm görüntüleri okuyarak araç çıkış işlemi yapar.
-    """
-    for file_name in os.listdir(IMAGE_FOLDER):
-        if file_name.lower().endswith(".jpg"):  # Sadece JPG dosyalarını işliyoruz
-            image_path = os.path.join(IMAGE_FOLDER, file_name)
-            print(f"Görüntü işleniyor: {image_path}")
-            detected_plates = detect_and_register_exit(image_path)
-            print(f"Çıkış İşlemi - Tespit Edilen Plakalar: {detected_plates}")
+    for file_name in os.listdir(folder_path):
+        if file_name.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_path = os.path.join(folder_path, file_name)
+            from cv2 import imread  # Görselleri okumak için cv2'den imread
+            image = imread(image_path)  # Görseli oku
+            plates = process_plate(image)  # Görsel üzerinden plaka algıla
+            print(f"Çıkış İşlemi - Algılanan Plakalar: {plates}")
 
 def main_menu():
     """
-    Kullanıcı menüsü: Giriş, çıkış ve kayıt listeleme işlemleri için.
+    Ana menü.
     """
+    folder_path = "C:/Users/muham/PycharmProjects/Otopark_Sistemi"  # Görsellerin olduğu klasör
     while True:
-        print("\n1. Tüm Görüntüler için Araç Giriş")
-        print("2. Tüm Görüntüler için Araç Çıkış")
-        print("3. Kayıtları Listele")
-        print("4. Veritabanını Sıfırla")
+        print("\n1. Araç Giriş İşlemi")
+        print("2. Araç Çıkış İşlemi")
+        print("3. Araç Kayıtlarını Görüntüle")
+        print("4. Kayıtları Sıfırla")
         print("5. Çıkış")
         choice = input("Seçiminiz: ")
-
         if choice == "1":
-            process_all_images_for_entry()  # Tüm görüntüler için giriş işlemi
+            process_images_for_entry(folder_path)
         elif choice == "2":
-            process_all_images_for_exit()  # Tüm görüntüler için çıkış işlemi
+            process_images_for_exit(folder_path)
         elif choice == "3":
-            records = get_all_records()
-            print("Veritabanındaki Kayıtlar:")
-            for record in records:
-                print(record)
+            logs = get_all_parking_logs()
+            if logs:
+                print("Araç Kayıtları:")
+                for log in logs:
+                    print(log)
+            else:
+                print("Veritabanında kayıt bulunamadı.")
         elif choice == "4":
-            confirm = input("Veritabanını sıfırlamak istediğinize emin misiniz? (E/h): ")
-            if confirm.lower() == "e":
-                clear_database()
+            confirm = input("Tüm araç kayıtlarını sıfırlamak istediğinize emin misiniz? (E/h): ")
+            if confirm.lower() == 'e':
+                clear_table("parking_log")
+                print("Araç kayıtları sıfırlandı.")
         elif choice == "5":
-            print("Sistem kapatılıyor...")
+            print("Çıkış yapılıyor...")
             break
         else:
-            print("Geçersiz seçim. Tekrar deneyin.")
+            print("Geçersiz seçim. Lütfen tekrar deneyin.")
 
 if __name__ == "__main__":
-    init_db()  # Veritabanını başlat
+    init_db()
     main_menu()
