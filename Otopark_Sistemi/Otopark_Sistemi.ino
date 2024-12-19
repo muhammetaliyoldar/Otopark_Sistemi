@@ -23,7 +23,7 @@ WiFiClient client;
 const float threshold = 100.0; // 1 metre eşik değeri (cm)
 bool lastStatus = false; // Önceki durumun kaydı (dolu/boş)
 unsigned long lastSendTime = 0; // Son veri gönderim zamanı
-const unsigned long sendInterval = 60000; // 60 saniye aralık
+const unsigned long sendInterval = 150000; // 15 saniye aralık
 
 void setup() {
   Serial.begin(115200);
