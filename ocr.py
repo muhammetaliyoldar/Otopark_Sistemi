@@ -1,6 +1,5 @@
 from ultralytics import YOLO
 import pytesseract
-import cv2
 from database import add_parking_log, update_parking_log
 from datetime import datetime
 import re

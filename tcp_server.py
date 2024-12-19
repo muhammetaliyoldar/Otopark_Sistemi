@@ -1,5 +1,4 @@
 import socket
-from datetime import datetime
 from database import init_db, add_parking_status
 
 def start_tcp_server():
