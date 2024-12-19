@@ -9,6 +9,7 @@ const int trigPin = 16;
 const int echoPin = 4;
 const int ledRed = 25;
 const int ledGreen = 26;
+const int pirPin = 14; // PIR sensör pin
 
 // WiFi bilgileri
 const char* ssid = "SUPERONLINE_Wi-Fi_1388";
@@ -20,10 +21,11 @@ const uint16_t serverPort = 12345;
 
 WiFiClient client;
 
-const float threshold = 100.0; // 1 metre eşik değeri (cm)
-bool lastStatus = false; // Önceki durumun kaydı (dolu/boş)
+const float thresholdLower = 160.0; // "Dolu" için alt eşik (cm)
+const float thresholdUpper = 175.0; // "Boş" için üst eşik (cm)
+bool lastStatus = false; // Önceki durum (false: boş, true: dolu)
 unsigned long lastSendTime = 0; // Son veri gönderim zamanı
-const unsigned long sendInterval = 150000; // 15 saniye aralık
+const unsigned long sendInterval = 30000; // 30 saniye minimum gönderim süresi
 
 void setup() {
   Serial.begin(115200);
@@ -32,6 +34,7 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(ledRed, OUTPUT);
   pinMode(ledGreen, OUTPUT);
+  pinMode(pirPin, INPUT);
 
   // RTC başlatma
   if (!rtc.begin()) {
@@ -81,43 +84,77 @@ float measureDistance() {
   return duration * 0.034 / 2; // cm cinsinden mesafe
 }
 
+float getAverageDistance(int numMeasurements) {
+  float total = 0;
+  int validReadings = 0;
+  for (int i = 0; i < numMeasurements; i++) {
+    float distance = measureDistance();
+    if (distance > 2 && distance < 400) { // Geçerli mesafeler
+      total += distance;
+      validReadings++;
+    }
+    delay(50); // Ölçümler arasında küçük bir bekleme
+  }
+  return validReadings > 0 ? total / validReadings : -1; // Geçerli ölçüm yoksa -1 döner
+}
+
+bool determineParkingStatus(float distance) {
+  if (lastStatus && distance > thresholdUpper) {
+    return false; // Boş
+  } else if (!lastStatus && distance < thresholdLower) {
+    return true; // Dolu
+  }
+  return lastStatus; // Durumu koru
+}
+
 void loop() {
-  float distance = measureDistance();
-  DateTime now = rtc.now();
+  int pirValue = digitalRead(pirPin);
 
-  bool currentStatus = distance <= threshold; // true: dolu, false: boş
+  if (pirValue == HIGH) { // Hareket algılandıysa ultrasonik sensör devreye girer
+    Serial.println("Hareket algılandı. Ultrasonik sensör aktif...");
 
-  // Durum değişikliği veya belirli bir süre geçtiyse işlem yap
-  if (currentStatus != lastStatus || (millis() - lastSendTime >= sendInterval)) {
-    lastStatus = currentStatus;
-    lastSendTime = millis();
+    float avgDistance = getAverageDistance(5); // 5 ölçümün ortalamasını al
+    Serial.print("Ölçülen Mesafe: ");
+    Serial.print(avgDistance);
+    Serial.println(" cm");
 
-    // LED durumunu değiştir
-    digitalWrite(ledRed, currentStatus ? HIGH : LOW);
-    digitalWrite(ledGreen, currentStatus ? LOW : HIGH);
-
-    // Mesaj oluştur
-    String statusMessage = String("Park Yeri: ") + (currentStatus ? "Dolu" : "Boş") +
-                           ", Tarih: " + String(now.day()) + "/" + String(now.month()) + "/" + String(now.year()) +
-                           ", Saat: " + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());
-
-    Serial.println(statusMessage);
-
-    // Sunucuya mesaj gönder
-    if (!client.connected()) {
-      connectToServer(); // Bağlantı kopmuşsa yeniden bağlan
+    if (avgDistance == -1) {
+      Serial.println("Geçersiz mesafe ölçümü.");
+      return; // Geçersiz ölçüm, devam etme
     }
-    if (client.connected()) {
-      client.println(statusMessage);
-      Serial.println("Mesaj sunucuya gönderildi.");
-      
-      // Geri bildirim kontrolü
-      if (client.available()) {
-        String response = client.readString();
-        Serial.println("Sunucudan gelen cevap: " + response);
+
+    bool currentStatus = determineParkingStatus(avgDistance);
+
+    // Durum değişikliği veya belirli bir süre geçtiyse işlem yap
+    if (currentStatus != lastStatus || (millis() - lastSendTime >= sendInterval)) {
+      lastStatus = currentStatus;
+      lastSendTime = millis();
+
+      // LED durumunu değiştir
+      digitalWrite(ledRed, currentStatus ? HIGH : LOW);
+      digitalWrite(ledGreen, currentStatus ? LOW : HIGH);
+
+      // Mesaj oluştur
+      DateTime now = rtc.now();
+      String statusMessage = String("Park Yeri: ") + (currentStatus ? "Dolu" : "Boş") +
+                             ", Tarih: " + String(now.day()) + "/" + String(now.month()) + "/" + String(now.year()) +
+                             ", Saat: " + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());
+
+      Serial.println("Gönderilen Mesaj: " + statusMessage);
+
+      // Sunucuya mesaj gönder
+      if (!client.connected()) {
+        connectToServer(); // Bağlantı kopmuşsa yeniden bağlan
       }
-    } else {
-      Serial.println("Sunucu bağlantısı hala başarısız.");
+      if (client.connected()) {
+        client.println(statusMessage);
+        Serial.println("Mesaj sunucuya gönderildi.");
+      } else {
+        Serial.println("Sunucu bağlantısı başarısız.");
+      }
     }
+  } else {
+    Serial.println("Hareket algılanmadı. Ultrasonik sensör beklemede...");
+    delay(500); // PIR sensör tekrar kontrol edilecek
   }
 }
