@@ -1,7 +1,6 @@
 import cv2
 from ocr import process_plate
 from database import init_db
-from datetime import datetime
 import time
 
 
