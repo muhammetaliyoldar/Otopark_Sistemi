@@ -11,7 +11,7 @@ def start_tcp_server():
     # Veritabanını başlat
     init_db()
 
-    # Sunucu soketini oluştur
+    # Sunucu soketini oluştur-
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen(5)  # Maksimum 5 bağlantı kuyruğu

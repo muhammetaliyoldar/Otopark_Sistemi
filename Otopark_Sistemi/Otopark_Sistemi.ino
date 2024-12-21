@@ -7,8 +7,8 @@ RTC_DS3231 rtc;
 // Sensör ve LED pinleri
 const int trigPin = 16;
 const int echoPin = 4;
-const int ledRed = 25;
-const int ledGreen = 26;
+const int ledRed = 26;
+const int ledGreen = 27;
 const int pirPin = 14; // PIR sensör pin
 
 // WiFi bilgileri
