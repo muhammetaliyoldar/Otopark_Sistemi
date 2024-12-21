@@ -1,0 +1,26 @@
+1. Setup dosyasını çalıştırın ve " C:\Program Files\Tesseract-OCR " konumuna kurulumu yapın
+
+
+2. Sistem PATH Ayarlarını Açın
+
+Başlat Menüsüne Git:
+Ortam Değişkenleri yazın ve Sistemde ortam değişkenlerini düzenle seçeneğine tıklayın.
+
+Ortam Değişkenleri Penceresini Açın:
+Açılan pencerede, alt kısımda bulunan Ortam Değişkenleri butonuna tıklayın.
+
+Sistem Değişkenlerini Bulun:
+
+Sistem değişkenleri bölümünde Path adındaki değişkeni bulun.
+
+Üzerine tıklayıp Düzenle butonuna tıklayın.
+
+
+3. Tesseract Yolunu PATH Değişkenine Ekleyin
+
+Açılan listede Yeni butonuna tıklayın.
+
+Tesseract'ın kurulu olduğu yolu yazın:
+C:\Program Files\Tesseract-OCR
+
+Değişiklikleri kaydedin.

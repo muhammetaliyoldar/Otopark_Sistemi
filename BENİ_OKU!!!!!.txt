@@ -1,0 +1,3 @@
+1. ortam terminalinizi açın
+2. " pip install -r requirements.txt " yazın ve enter'e basın ve terminalde tüm yüklemelerin tamamlandığının takip edin
+3. ocr_kurulum dosyasındaki adımlar ile devam edin

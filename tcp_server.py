@@ -5,13 +5,13 @@ def start_tcp_server():
     """
     TCP sunucusunu başlatır ve gelen verileri işleyerek parking_status tablosuna kaydeder.
     """
-    HOST = '192.168.1.6'  # Sunucu tüm ağ arayüzlerinde çalışır
+    HOST = '192.168.1.12'  # Sunucu tüm ağ arayüzlerinde çalışır
     PORT = 12345      # ESP32 ile uyumlu port
 
     # Veritabanını başlat
     init_db()
 
-    # Sunucu soketini oluştur
+    # Sunucu soketini oluştur-
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen(5)  # Maksimum 5 bağlantı kuyruğu
